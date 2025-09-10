@@ -77,7 +77,7 @@ const Dashboard = () => {
  
  async function getlocation(){
     try {
-      const res = await axios.get('http://localhost:8000/api/SOS')  
+      const res = await axios.get('https://rescuelink-backend.onrender.com/api/SOS')  
       console.log(res.data.data);
       setEmergencies(res.data.data)
     } catch (error) {

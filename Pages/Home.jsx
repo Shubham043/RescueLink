@@ -35,14 +35,14 @@ function Home() {
   const handleSubmitEmergency = async () => {
     if (emergencyType && contactNumber) {
      try {
-       const response = await axios.post("http://localhost:8000/api/SOS",{
+       const response = await axios.post("https://rescuelink-backend.onrender.com/api/SOS",{
          phoneNumber: contactNumber,
-        username: "Nikki_sharma", 
+        username: "Nitin_sharma", 
         emergencyType:emergencyType,
         message: "SOS Alert triggered from frontend", 
         nearestLandmark: nearestLocation || "Not provided",
-        latitude: 31.4500,
-        longitude: 76.7500
+        latitude: 29.3255,
+        longitude: 76.2998
        })
        console.log(response.data.alert);
       //  alert(response.data.message)
