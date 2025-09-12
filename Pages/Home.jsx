@@ -2,6 +2,9 @@ import { useState } from 'react';
 import LocationAccess from '../components/getlocation';
 import LocationStatus from '../components/LocationStatus';
 import axios from "axios";
+import { toast } from "react-toastify";
+import { BACKEND_URL } from '../src/config';
+import Navbar from './navbar';
 function Home() {
   const [isSosActive, setIsSosActive] = useState(false);
   const [hasLocationAccess, setHasLocationAccess] = useState(false);
@@ -13,6 +16,7 @@ function Home() {
 
   const handleSosClick = () => {
     setIsSosActive(true);
+
     console.log("SOS activated! Sending emergency alert...");
   };
 
@@ -33,30 +37,36 @@ function Home() {
   };
 
   const handleSubmitEmergency = async () => {
-    if (emergencyType && contactNumber) {
-     try {
-       const response = await axios.post("https://rescuelink-backend.onrender.com/api/SOS",{
-         phoneNumber: contactNumber,
-        username: "Nitin_sharma", 
-        emergencyType:emergencyType,
-        message: "SOS Alert triggered from frontend", 
-        nearestLandmark: nearestLocation || "Not provided",
-        latitude: 29.3255,
-        longitude: 76.2998
-       })
-       console.log(response.data.alert);
-      //  alert(response.data.message)
-        alert(`✅ Emergency alert sent! ID: ${response.data.alert._id}`);
-     } catch (error) {
-      console.log(error);
-     }      
-    } else {
-      alert("Please fill out all fields");
-    }
-  };
+  if (!emergencyType || !contactNumber) {
+    toast.error("Please fill out all fields");
+    return;
+  }
+
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/SOS`, {
+      phoneNumber: contactNumber,
+      username: "Nitin_sharma_Polist",
+      emergencyType: emergencyType,
+      message: "SOS Alert triggered from frontend",
+      nearestLandmark: nearestLocation || "Not provided",
+      latitude: 29.3255,
+      longitude: 76.2998,
+    });
+
+    toast.success(`✅ Emergency alert sent! ID: ${response.data.alert._id}`);
+    console.log("Alert sent:", response.data.alert);
+  } catch (error) {
+    console.error("Error sending SOS:", error);
+    toast.error(error.response?.data?.error || "Failed to send emergency alert");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col items-center justify-center p-4">
+      <div className='flex justify-center items-center'>
+      <Navbar/>
+      </div>
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-blue-600 text-white p-6 text-center">

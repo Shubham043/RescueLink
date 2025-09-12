@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import Navbar from './navbar';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 import socket from '../src/utils/socket';
-console.log(socket);
+import { toast } from "react-toastify";
+import { configDotenv } from 'dotenv';
+import { BACKEND_URL } from '../src/config';
+console.log(BACKEND_URL);
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -62,26 +66,16 @@ const Dashboard = () => {
   const [selectedEmergency, setSelectedEmergency] = useState(null);
   const [rescuerLocation, setRescuerLocation] = useState(null);
 
-  // Mock data - in a real app, this would come from an API
-//   const mockEmergencies = [
-//     {
-//       id: 1,
-//       type: 'medical',
-//       location: { lat: 31.3430, lng: 76.7880 },
-//       timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-//       contact: '+1234567890',
-//       status: 'active',
-//       details: 'Elderly person experiencing chest pain'
-//     },
-//   ];
+ 
  
  async function getlocation(){
     try {
-      const res = await axios.get('https://rescuelink-backend.onrender.com/api/SOS')  
+      const res = await axios.get(`${BACKEND_URL}/api/SOS`)  
       console.log(res.data.data);
       setEmergencies(res.data.data)
     } catch (error) {
         console.log(error);
+       toast.error(error.response?.data?.error || "Failed to fetch alerts");
     }
   }
   useEffect(() => {
@@ -173,6 +167,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
+      <div className='flex justify-center items-center'>
+            <Navbar/>
+       </div>
+      
       <header className="bg-blue-600 text-white p-4 shadow-lg">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -183,7 +181,7 @@ const Dashboard = () => {
             <div className="relative">
               <i className="fas fa-bell"></i>
               <span className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                {emergencies.length}
+                {emergencies?.length}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -202,14 +200,14 @@ const Dashboard = () => {
           <div className="lg:col-span-1 bg-white rounded-lg shadow p-4">
             <h2 className="text-xl font-bold mb-4">Active Emergencies</h2>
             
-            {emergencies.length === 0 ? (
+            {emergencies?.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <i className="fas fa-check-circle text-3xl mb-3 text-green-500"></i>
                 <p>No active emergencies</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {emergencies.map(emergency => (
+                {emergencies?.map(emergency => (
                   <div 
                     key={emergency.id} 
                     className={`p-3 rounded-lg cursor-pointer border-l-4 ${
@@ -260,7 +258,7 @@ const Dashboard = () => {
                 </Marker>
                 
                 {/* Emergency markers */}
-                {emergencies.map(emergency => (
+                {emergencies?.map(emergency => (
                   <Marker 
                     key={emergency._id} 
                     position={[emergency.location.coordinates[1], emergency.location.coordinates[0]]}

@@ -3,7 +3,7 @@ import { useState } from 'react';
 const LocationAccess = ({ onLocationGranted, onLocationDenied }) => {
   const [showCustomAlert, setShowCustomAlert] = useState(false);
   const [locationError, setLocationError] = useState(null);
-
+ 
   const requestLocationAccess = () => {
     if ("geolocation" in navigator) {
       // Close our custom alert and show browser's permission dialog

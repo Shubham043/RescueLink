@@ -1,6 +1,7 @@
 import { io } from "socket.io-client";
-
-const socket = io("https://rescuelink-backend.onrender.com",{
+const PORT = import.meta.env.VITE_LOCAL_HOST;
+console.log("PORT---->",PORT)
+const socket = io(`${PORT}`,{
     transports:["websocket"],
     withCredentials:true
 })
