@@ -63,10 +63,8 @@ function Home() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex flex-col items-center justify-center p-4">
-      <div className='flex justify-center items-center'>
-      <Navbar/>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex flex-col items-center justify-center p-4">
+       
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-blue-600 text-white p-6 text-center">
