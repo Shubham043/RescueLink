@@ -4,6 +4,7 @@ import LocationStatus from '../components/LocationStatus';
 import axios from "axios";
 import { toast } from "react-toastify";
 import { BACKEND_URL } from '../src/config';
+import { useNavigate } from 'react-router-dom';
 import Navbar from './navbar';
 function Home() {
   const [isSosActive, setIsSosActive] = useState(false);
@@ -13,7 +14,7 @@ function Home() {
   const [coords, setCoords] = useState(null);
   const [locationError, setLocationError] = useState(null);
   const [nearestLocation, setNearestLocation] = useState('')
-
+ const navigate = useNavigate()
   const handleSosClick = () => {
     setIsSosActive(true);
 
@@ -54,6 +55,7 @@ function Home() {
     });
 
     toast.success(`✅ Emergency alert sent! ID: ${response.data.alert._id}`);
+    navigate(`/track/${response.data.alert._id}`);
     console.log("Alert sent:", response.data.alert);
   } catch (error) {
     console.error("Error sending SOS:", error);

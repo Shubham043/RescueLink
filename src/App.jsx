@@ -3,6 +3,7 @@ import Home from "../Pages/Home";
 import Dashboard from "../Pages/Dashboard";
 import Login from "../Pages/login";
 import Signup from "../Pages/signup";
+import TrackingPage from '../Pages/TrackingPage';
 import Layout from "./Layout";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "../components/protectedRoutes";
@@ -17,6 +18,7 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/track/:alertId" element={<TrackingPage />} />
             <Route path="/dashboard" element={
   <ProtectedRoute>
     <Dashboard />

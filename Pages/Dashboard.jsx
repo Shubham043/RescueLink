@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -28,7 +28,7 @@ const Dashboard = () => {
   const [emergencies, setEmergencies] = useState([]);
   const [selectedEmergency, setSelectedEmergency] = useState(null);
   const [rescuerLocation, setRescuerLocation] = useState(null);
-
+  const locationIntervalRef = useRef(null);
   async function getlocation() {
     try {
       const res = await axiosInstance.get('/api/SOS');
@@ -50,36 +50,96 @@ const Dashboard = () => {
     getlocation();
   }, []);
 
+
   useEffect(() => {
     socket.on("newAlert", (data) => {
       setEmergencies(prev => [...prev, data.newAlert]);
     });
     return () => socket.off("newAlert");
   }, []);
+  useEffect(() => {
+  return () => {
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+    }
+  };
+}, []);
 
-  const handleAcceptEmergency = async (emergencyId) => {
+ const handleAcceptEmergency = async (emergencyId) => {
   try {
     const res = await axiosInstance.patch(`/api/SOS/${emergencyId}/accept`);
-    
-    // update UI to reflect new status
-    setEmergencies(emergencies.map(emergency =>
-      emergency._id === emergencyId
-        ? res.data.alert  // use updated alert from backend
-        : emergency
+ 
+    setEmergencies(emergencies.map(e =>
+      e._id === emergencyId ? res.data.alert : e
     ));
-
     setSelectedEmergency(null);
     toast.success('Emergency accepted! Head to the location.');
+ 
+    /*
+      WHY join the room after accepting?
+      - Rescuer needs to be in the alert's socket room
+      - So their location broadcasts only reach THIS victim
+      - Not all victims on all tracking pages
+    */
+    socket.emit('joinRescuerRoom', emergencyId);
+ 
+    /*
+      WHY clear previous interval before starting new one?
+      - If rescuer accepts a second emergency before resolving first
+        (which we'll limit to 3 max later)
+      - Without clearing, multiple intervals run simultaneously
+      - Battery drain + multiple location streams
+    */
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+    }
+ 
+    /*
+      WHY setInterval and not watchPosition?
+      - watchPosition fires on EVERY GPS change — too frequent (10-20/sec)
+      - setInterval with getCurrentPosition fires every 5 seconds — controlled
+      - Industry standard (Uber, Zomato use 4-5 second intervals)
+      - Battery friendly
+    */
+    locationIntervalRef.current = setInterval(() => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          socket.emit('rescuerLocationUpdate', {
+            alertId: emergencyId,
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => console.error('Location error:', err),
+        {
+          enableHighAccuracy: true, // WHY? Emergency app needs precise GPS not cell tower
+          timeout: 5000,            // Give up after 5s if no GPS signal
+          maximumAge: 0,            // WHY 0? Always get fresh location, never cached
+        }
+      );
+    }, 5000); // every 5 seconds
+ 
   } catch (err) {
     toast.error(err.response?.data?.message || 'Failed to accept emergency');
   }
 };
-
+ 
+// ─── REPLACE handleResolveEmergency with this ────────────────────────────────
 const handleResolveEmergency = async (emergencyId) => {
   try {
     await axiosInstance.patch(`/api/SOS/${emergencyId}/resolve`);
-
-    // remove from list since it's resolved
+ 
+    /*
+      WHY clear interval on resolve?
+      - Emergency is done, no need to keep sending location
+      - Stops battery drain
+      - Stops unnecessary socket events to server
+    */
+    if (locationIntervalRef.current) {
+      clearInterval(locationIntervalRef.current);
+      locationIntervalRef.current = null;
+    }
+ 
     setEmergencies(emergencies.filter(e => e._id !== emergencyId));
     setSelectedEmergency(null);
     toast.success('Emergency marked as resolved!');
@@ -87,6 +147,7 @@ const handleResolveEmergency = async (emergencyId) => {
     toast.error(err.response?.data?.message || 'Failed to resolve emergency');
   }
 };
+ 
 
   const formatTime = (timestamp) => {
     const diffMinutes = Math.floor((new Date() - new Date(timestamp)) / 60000);
