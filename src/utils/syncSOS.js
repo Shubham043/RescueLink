@@ -7,7 +7,7 @@ console.log("Backend URL", BACKEND_URL);
 
 export const syncSOS = async () => {
   try {
-    const queuedSOS = await getAllSOS();
+    const queuedSOS = await getSOS();
 
     if (!queuedSOS.length) return;
 
