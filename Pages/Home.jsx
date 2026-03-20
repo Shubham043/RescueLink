@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { BACKEND_URL } from '../src/config';
 import { useNavigate } from 'react-router-dom';
+import { addSOS } from '../src/utils/db';
 import Navbar from './navbar';
 function Home() {
   const [isSosActive, setIsSosActive] = useState(false);
@@ -42,9 +43,7 @@ function Home() {
     toast.error("Please fill out all fields");
     return;
   }
-
-  try {
-    const response = await axios.post(`${BACKEND_URL}/api/SOS`, {
+  const payload ={
       phoneNumber: contactNumber,
       username: "Nitin_sharma_Polist",
       emergencyType: emergencyType,
@@ -52,14 +51,30 @@ function Home() {
       nearestLandmark: nearestLocation || "Not provided",
       latitude: 29.3255,
       longitude: 76.2998,
-    });
+    }
+  if(!navigator.onLine){
+    await addSOS({...payload,timestamp:Date.now()})
+    toast.success("No internet. SOS saved and will be sent automatically.");
+    return;
+  }
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/SOS`,payload);
 
     toast.success(`✅ Emergency alert sent! ID: ${response.data.alert._id}`);
     navigate(`/track/${response.data.alert._id}`);
     console.log("Alert sent:", response.data.alert);
   } catch (error) {
     console.error("Error sending SOS:", error);
+
+  if (!error.response) {
+    // 🔴 NETWORK FAILURE → queue it
+    await addSOS({ ...payload, timestamp: Date.now() });
+
+    toast.error("Network issue. SOS saved and will retry automatically.");
+  } else {
+    // ❌ VALIDATION / SERVER ERROR → don't queue
     toast.error(error.response?.data?.error || "Failed to send emergency alert");
+  }
   }
 };
 
