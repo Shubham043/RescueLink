@@ -49,14 +49,10 @@ function Home() {
       emergencyType: emergencyType,
       message: "SOS Alert triggered from frontend",
       nearestLandmark: nearestLocation || "Not provided",
-      latitude: 29.3255,
-      longitude: 76.2998,
+      latitude: coords?.lat,
+      longitude: coords?.lon,
     }
-  if(!navigator.onLine){
-    await addSOS({...payload,timestamp:Date.now()})
-    toast.success("No internet. SOS saved and will be sent automatically.");
-    return;
-  }
+   
   try {
     const response = await axios.post(`${BACKEND_URL}/api/SOS`,payload);
 
@@ -115,7 +111,7 @@ function Home() {
               </div>
 
               {/* Location Components */}
-              {!hasLocationAccess && !locationError && (
+              {!hasLocationAccess && (
                 <LocationAccess 
                   onLocationGranted={handleLocationGranted} 
                   onLocationDenied={handleLocationDenied} 
