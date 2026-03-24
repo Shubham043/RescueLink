@@ -1,5 +1,6 @@
 import { io } from "socket.io-client";
-const PORT = import.meta.env.VITE_LOCAL_HOST;
+import { BACKEND_URL } from "../config";
+const PORT = BACKEND_URL
 console.log("PORT---->",PORT)
 const socket = io(`${PORT}`,{
     transports:["websocket"],
