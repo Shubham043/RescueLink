@@ -46,12 +46,12 @@ function Home() {
   try {
     const response = await axios.post(`${BACKEND_URL}/api/SOS`, {
       phoneNumber: contactNumber,
-      username: "Nitin_sharma_Polist",
+      username: "Anonymous",
       emergencyType: emergencyType,
       message: "SOS Alert triggered from frontend",
       nearestLandmark: nearestLocation || "Not provided",
-      latitude: 29.3255,
-      longitude: 76.2998,
+      latitude: coords?.lat,
+      longitude: coords?.lon,
     });
 
     toast.success(`✅ Emergency alert sent! ID: ${response.data.alert._id}`);
