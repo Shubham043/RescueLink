@@ -8,8 +8,25 @@ import Layout from "./Layout";
 import { ToastContainer } from "react-toastify";
 import ProtectedRoute from "../components/protectedRoutes";
 import "react-toastify/dist/ReactToastify.css";
+import { syncSOS } from "./utils/syncSOS";
+import { useEffect } from "react";
 
 function App() {
+   useEffect(() => {
+    const handleOnline = () => {
+      console.log("Internet back. Syncing...");
+      syncSOS();
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
+  useEffect(() => {
+    syncSOS();
+  },[])
   return (
     <>
       <BrowserRouter>
